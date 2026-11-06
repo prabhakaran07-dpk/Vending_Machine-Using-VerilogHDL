@@ -88,20 +88,83 @@ endmodule
 ```
 # Testbench
 ```
+`timescale 1ns / 1ps
 
+module vending_tb;
+
+reg clk;
+reg reset;
+reg coin5;
+reg coin10;
+
+wire product;
+wire change;
+
+// Instantiate the vending machine
+vending uut (
+    .clk(clk),
+    .reset(reset),
+    .coin5(coin5),
+    .coin10(coin10),
+    .product(product),
+    .change(change)
+);
+
+// Clock generation (10ns period)
+always #5 clk = ~clk;
+
+initial begin
+    // Initialize inputs
+    clk = 0;
+    reset = 1;
+    coin5 = 0;
+    coin10 = 0;
+
+    // Apply reset
+    #10 reset = 0;
+
+    // Test Case 1: 5 + 10 = 15 (product)
+    #10 coin5 = 1;  #10 coin5 = 0;
+    #10 coin10 = 1; #10 coin10 = 0;
+
+    // Wait
+    #20;
+
+    // Test Case 2: 10 + 10 = 20 (product + change)
+    #10 coin10 = 1; #10 coin10 = 0;
+    #10 coin10 = 1; #10 coin10 = 0;
+
+    // Wait
+    #20;
+
+    // Test Case 3: 5 + 5 + 5 = 15 (product)
+    #10 coin5 = 1; #10 coin5 = 0;
+    #10 coin5 = 1; #10 coin5 = 0;
+    #10 coin5 = 1; #10 coin5 = 0;
+
+    // Wait
+    #30;
+
+    $finish;
+end
+
+// Monitor signals
+initial begin
+    $monitor("Time=%0t | coin5=%b coin10=%b | product=%b change=%b",
+              $time, coin5, coin10, product, change);
+end
+
+endmodule
 ```
 Expected Waveform Behavior
-Case 1: 5 + 5 + 5
-   dispense = 1
-   change = 0
-Case 2: 10 + 5
-   dispense = 1
-   change = 0
-Case 3: 10 + 10
-   dispense = 1
-   change = 1
+| Test Case | Coin Input | Total Amount | Product | Change |
+|---|---|---:|---:|---:|
+| Case 1 | ₹5 + ₹10 | ₹15 | 1 | 0 |
+| Case 2 | ₹10 + ₹10 | ₹20 | 1 | 1 |
+| Case 3 | ₹5 + ₹5 + ₹5 | ₹15 | 1 | 0 |
 
 # Output waveform 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/dbd2b97a-6e0b-48c3-ae3e-3148f9679b11" />
 
 # Conclusion
 The vending machine controller was successfully designed using a Moore FSM model. The simulation verified correct product dispensing and change return behavior for different coin inputs.
